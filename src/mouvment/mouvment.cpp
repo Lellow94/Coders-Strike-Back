@@ -22,20 +22,25 @@ int main()
         int nextCheckpointDist; // distance to the next checkpoint
         int nextCheckpointAngle; // angle between your pod orientation and the direction of the next checkpoint
         cin >> x >> y >> nextCheckpointX >> nextCheckpointY >> nextCheckpointDist >> nextCheckpointAngle; cin.ignore();
-        int opponentX;
-        int opponentY;
-        cin >> opponentX >> opponentY; cin.ignore();
+        bool boostAvailable;
 
         // Write an action using cout. DON'T FORGET THE "<< endl"
         // To debug: cerr << "Debug messages..." << endl;
         cout << nextCheckpointX << " " << nextCheckpointY << " ";
-        if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90 || nextCheckpointDist < 20)
+        if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90)
         {
             cout << "0";
         }
         else
         {
-            cout << "100";
+            if(nextCheckpointDist > 6000 && boostAvailable)
+            {
+                cout << "BOOST";
+            }
+            else
+            {
+                cout << "100";
+            }
         }
 
 
