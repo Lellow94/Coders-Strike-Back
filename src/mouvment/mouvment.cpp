@@ -122,14 +122,36 @@ public:
 
 typedef vec2<float> vec2f;
 typedef vec2<double> vec2d;
+typedef vec2<int> vec2i;
 
 /**
  * Auto-generated code below aims at helping you parse
  * the standard input according to the problem statement.
  **/
 
+class Pod
+{
+public:
+    Pod() :
+    position{},
+    target{}
+    {}
+
+void Out(int x, int y, int thrust, bool useBoost = false)
+{
+    cout << x << " " << y << " " << useBoost && boostAvailable ? "BOOST" : thrust << endl;
+    boostAvailable = boostAvailable && !useBoost;
+}
+
+private:
+    vec2i position;
+    vec2i target;
+    bool boostAvailable;
+}
+
 int main()
 {
+    Pod pod;
 
     // game loop
     while (1) {
@@ -140,27 +162,18 @@ int main()
         int nextCheckpointDist; // distance to the next checkpoint
         int nextCheckpointAngle; // angle between your pod orientation and the direction of the next checkpoint
         cin >> x >> y >> nextCheckpointX >> nextCheckpointY >> nextCheckpointDist >> nextCheckpointAngle; cin.ignore();
-        bool boostAvailable;
 
-        // Write an action using cout. DON'T FORGET THE "<< endl"
-        // To debug: cerr << "Debug messages..." << endl;
-        cout << nextCheckpointX << " " << nextCheckpointY << " ";
         if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90)
         {
-            cout << "0";
+            pod.Out(nextCheckpointX, nextCheckpointY, 0);
         }
         else
         {
-            if(nextCheckpointDist > 6000 && boostAvailable)
+            if(nextCheckpointDist > 6000)
             {
-                cout << "BOOST";
-            }
-            else
-            {
-                cout << "100";
+                pod.Out(nextCheckpointX, nextCheckpointY, 100, boostAvailable);
             }
         }
-
 
         // You have to output the target position
         // followed by the power (0 <= thrust <= 100)
