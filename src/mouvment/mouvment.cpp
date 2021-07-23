@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -51,7 +52,6 @@ public:
         return vec2(x / s, y / s);
     }
     
-    
     vec2& operator+=(double s) {
         x += s;
         y += s;
@@ -71,6 +71,14 @@ public:
         x /= s;
         y /= s;
         return *this;
+    }
+
+    bool operator == ( const vec2& v ) const {
+        return ( x == v.x ) && ( y == v.y );
+    }
+
+    bool operator != ( const vec2& v ) const {
+        return ( x != v.x ) || ( y != v.y );
     }
     
     void set(T x, T y) {
@@ -117,7 +125,6 @@ public:
     static float cross(vec2 v1, vec2 v2) {
         return (v1.x * v2.y) - (v1.y * v2.x);
     }
-    
 };
 
 typedef vec2<float> vec2f;
@@ -179,7 +186,16 @@ void AddCheckpoint(int x, int y)
 void Out(int x, int y, int thrust, bool boostAsked = false)
 {
     bool useBoost = UseBoost(boostAsked);
-    cout << x << " " << y << " " << useBoost && boostAvailable ? "BOOST" : thrust << endl;
+    cout << x << " " << y << " ";
+    if(useBoost)
+    {
+        cout << "BOOST";
+    }
+    else 
+    {
+        cout << thrust;
+    }
+    cout << endl;
 }
 
 void Update()
@@ -200,11 +216,9 @@ void Update()
     }
     else
     {
-        if(nextCheckpointDist > 6000)
-        {
-            Out(nextCheckpointX, nextCheckpointY, 100, boostAvailable);
-        }
+        Out(nextCheckpointX, nextCheckpointY, 100, nextCheckpointDist > 6000);
     }
+
 }
 
 private:
@@ -213,7 +227,7 @@ private:
     vec2i target;
     bool boostAvailable : 1;
     bool allCheckpointFound : 1;
-}
+};
 
 int main()
 {
