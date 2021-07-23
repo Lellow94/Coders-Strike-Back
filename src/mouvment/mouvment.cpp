@@ -131,42 +131,44 @@ typedef vec2<float> vec2f;
 typedef vec2<double> vec2d;
 typedef vec2<int> vec2i;
 
-
+constexpr int epsilon = 3000;
 
 class Pod
 {
 public:
     Pod() :
     position{},
-    target{}
+    target{},
+    boostAvailable{true},
+    allCheckpointFound{false},
+    maxDistance{}
     {}
 
-bool UseBoost(bool boostAsked)
+bool UseBoost(bool boostAsked, int currentDistance)
 {
-    bool useBoost;
-
     if(!boostAvailable)
     {
         return false;
     }
 
-    if(boostAsked)
+    if(boostAsked && currentDistance + epsilon > maxDistance)
     {
-        return true;
         boostAvailable = false;
+        cerr << "USE BOOST" << endl;
+        return true;
     }
 
     return false;
 }
 
-void AddCheckpoint(int x, int y)
+void AddCheckpoint(vec2i position, int distance)
 {
     if(allCheckpointFound)
     {
         return;
     }
     
-    const vec2 newCheckpoint(x, y);
+    const vec2 newCheckpoint(position);
     
     if(checkpoints.empty())
     {
@@ -180,13 +182,19 @@ void AddCheckpoint(int x, int y)
         {
             allCheckpointFound = true;  
         }
+
+        if(maxDistance < distance)
+        {
+            maxDistance = distance;
+        }
     }
 }
 
-void Out(int x, int y, int thrust, bool boostAsked = false)
+void Out(vec2i position, int thrust, bool boostAsked = false)
 {
-    bool useBoost = UseBoost(boostAsked);
-    cout << x << " " << y << " ";
+    bool useBoost = UseBoost(boostAsked, currentDistance);
+    cout << position.x << " " << position.y << " ";
+    cerr << "BOOST AVALAIBLE : " << boostAvailable << endl;
     if(useBoost)
     {
         cout << "BOOST";
@@ -200,23 +208,27 @@ void Out(int x, int y, int thrust, bool boostAsked = false)
 
 void Update()
 {
-    int x;
-    int y;
-    int nextCheckpointX; // x position of the next check point
-    int nextCheckpointY; // y position of the next check point
-    int nextCheckpointDist; // distance to the next checkpoint
-    int nextCheckpointAngle; // angle between your pod orientation and the direction of the next checkpoint
-    cin >> x >> y >> nextCheckpointX >> nextCheckpointY >> nextCheckpointDist >> nextCheckpointAngle; cin.ignore();
+    cin >> position.x >> position.y >> target.x >> target.y >> currentDistance >> targetAngle; cin.ignore();
+    int opponentX;
+    int opponentY;
+    cin >> opponentX >> opponentY; cin.ignore();
 
-    AddCheckpoint(x, y);
+    AddCheckpoint(target, currentDistance);
 
-    if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90)
+    if(targetAngle > 90 || targetAngle < -90)
     {
-        Out(nextCheckpointX, nextCheckpointY, 0);
+        Out(target, 0);
     }
     else
     {
-        Out(nextCheckpointX, nextCheckpointY, 100, nextCheckpointDist > 6000);
+        if(allCheckpointFound && currentDistance + epsilon > maxDistance)
+        {
+            Out(target, 100, true);
+        }
+        else
+        {
+            Out(target, 100);
+        }
     }
 
 }
@@ -225,6 +237,9 @@ private:
     vector<vec2i> checkpoints;
     vec2i position;
     vec2i target;
+    int maxDistance;
+    int currentDistance;
+    int targetAngle;
     bool boostAvailable : 1;
     bool allCheckpointFound : 1;
 };
@@ -236,6 +251,6 @@ int main()
     // game loop
     while (1)
     {
-        pod.Update();    
+        pod.Update();
     }
 }
