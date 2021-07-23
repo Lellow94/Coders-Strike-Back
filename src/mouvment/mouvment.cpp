@@ -124,10 +124,7 @@ typedef vec2<float> vec2f;
 typedef vec2<double> vec2d;
 typedef vec2<int> vec2i;
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+
 
 class Pod
 {
@@ -155,17 +152,67 @@ bool UseBoost(bool boostAsked)
     return false;
 }
 
+void AddCheckpoint(int x, int y)
+{
+    if(allCheckpointFound)
+    {
+        return;
+    }
+    
+    const vec2 newCheckpoint(x, y);
+    
+    if(checkpoints.empty())
+    {
+        checkpoints.push_back(newCheckpoint);
+    }
+    else if(checkpoints.back() != newCheckpoint)
+    {
+        checkpoints.push_back(newCheckpoint);
+
+        if(checkpoints.front() == newCheckpoint)
+        {
+            allCheckpointFound = true;  
+        }
+    }
+}
+
 void Out(int x, int y, int thrust, bool boostAsked = false)
 {
-    bool useBoost = UseBoost();
+    bool useBoost = UseBoost(boostAsked);
     cout << x << " " << y << " " << useBoost && boostAvailable ? "BOOST" : thrust << endl;
-    boostAvailable = boostAvailable && !useBoost;
+}
+
+void Update()
+{
+    int x;
+    int y;
+    int nextCheckpointX; // x position of the next check point
+    int nextCheckpointY; // y position of the next check point
+    int nextCheckpointDist; // distance to the next checkpoint
+    int nextCheckpointAngle; // angle between your pod orientation and the direction of the next checkpoint
+    cin >> x >> y >> nextCheckpointX >> nextCheckpointY >> nextCheckpointDist >> nextCheckpointAngle; cin.ignore();
+
+    AddCheckpoint(x, y);
+
+    if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90)
+    {
+        Out(nextCheckpointX, nextCheckpointY, 0);
+    }
+    else
+    {
+        if(nextCheckpointDist > 6000)
+        {
+            Out(nextCheckpointX, nextCheckpointY, 100, boostAvailable);
+        }
+    }
 }
 
 private:
+    vector<vec2i> checkpoints;
     vec2i position;
     vec2i target;
-    bool boostAvailable;
+    bool boostAvailable : 1;
+    bool allCheckpointFound : 1;
 }
 
 int main()
@@ -173,30 +220,8 @@ int main()
     Pod pod;
 
     // game loop
-    while (1) {
-        int x;
-        int y;
-        int nextCheckpointX; // x position of the next check point
-        int nextCheckpointY; // y position of the next check point
-        int nextCheckpointDist; // distance to the next checkpoint
-        int nextCheckpointAngle; // angle between your pod orientation and the direction of the next checkpoint
-        cin >> x >> y >> nextCheckpointX >> nextCheckpointY >> nextCheckpointDist >> nextCheckpointAngle; cin.ignore();
-
-        if(nextCheckpointAngle > 90 || nextCheckpointAngle < -90)
-        {
-            pod.Out(nextCheckpointX, nextCheckpointY, 0);
-        }
-        else
-        {
-            if(nextCheckpointDist > 6000)
-            {
-                pod.Out(nextCheckpointX, nextCheckpointY, 100, boostAvailable);
-            }
-        }
-
-        // You have to output the target position
-        // followed by the power (0 <= thrust <= 100)
-        // i.e.: "x y thrust"
-         cout << endl;
+    while (1)
+    {
+        pod.Update();    
     }
 }
