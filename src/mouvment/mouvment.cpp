@@ -137,8 +137,27 @@ public:
     target{}
     {}
 
-void Out(int x, int y, int thrust, bool useBoost = false)
+bool UseBoost(bool boostAsked)
 {
+    bool useBoost;
+
+    if(!boostAvailable)
+    {
+        return false;
+    }
+
+    if(boostAsked)
+    {
+        return true;
+        boostAvailable = false;
+    }
+
+    return false;
+}
+
+void Out(int x, int y, int thrust, bool boostAsked = false)
+{
+    bool useBoost = UseBoost();
     cout << x << " " << y << " " << useBoost && boostAvailable ? "BOOST" : thrust << endl;
     boostAvailable = boostAvailable && !useBoost;
 }
