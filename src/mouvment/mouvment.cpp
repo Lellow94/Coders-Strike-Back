@@ -132,6 +132,10 @@ typedef vec2<double> vec2d;
 typedef vec2<int> vec2i;
 
 constexpr int epsilon = 3000;
+constexpr int slowingRadius = 3000;
+constexpr int straitAngle = 5;
+constexpr int UILapNumber = 3;
+constexpr int maxAngle = 90;
 
 class Pod
 {
@@ -141,7 +145,8 @@ public:
     target{},
     boostAvailable{true},
     allCheckpointFound{false},
-    maxDistance{}
+    maxDistance{},
+    lapNumber{}
     {}
 
 bool UseBoost(bool boostAsked, int currentDistance, int angle)
@@ -156,12 +161,17 @@ bool UseBoost(bool boostAsked, int currentDistance, int angle)
         return false;
     }
 
-    if(angle > 5 || angle < -5)
+    if(!allCheckpointFound)
     {
         return false;
     }
 
-    if(lapNumber == 3 && currentCheckpoint == checkpointNumber - 1)
+    if(angle > straitAngle || angle < -straitAngle)
+    {
+        return false;
+    }
+
+    if(lapNumber == UILapNumber && currentCheckpoint == checkpointNumber - 1)
     {
         cerr << "LAST MINUTE BOOST" << endl;
         return true;
@@ -260,28 +270,43 @@ void Update()
         }
     }
 
-    if(targetAngle > 90 || targetAngle < -90)
+    if(targetAngle > straitAngle || targetAngle < -straitAngle)
     {
-        Out(target, 0);
-    }
-    else
-    {
-        if(allCheckpointFound)
+        vec2 desiredDirection(target.x - position.x, target.y - position.y);
+        desiredDirection = desiredDirection.normalize();
+        
+        vec2 currentDirection = desiredDirection;
+        currentDirection.rotate(-targetAngle);
+        currentDirection = currentDirection.normalize();
+        
+        vec2 steeringDirection = (desiredDirection - currentDirection);
+        steeringDirection = steeringDirection.normalize() * 300;
+        
+        target += steeringDirection.x;
+        target += steeringDirection.y;
+
+        if(targetAngle <= -maxAngle || targetAngle >= maxAngle)
         {
-            Out(target, 100);
+            Out(target, 0);
+        }
+        else if(currentDistance < slowingRadius)
+        {
+            Out(target, 100 * (maxAngle - abs(targetAngle)) / (float) maxAngle);
         }
         else
         {
-            cerr << "CurrentDistance : " << currentDistance << endl;
-            if(currentDistance < 3000 && (targetAngle > 5 || targetAngle < -5))
-            {
-                cerr << "SLOW" << endl;
-                Out(target, currentDistance / 3000);
-            }
-            else
-            {
-                Out(target, 100);
-            }
+            Out(target, 100);
+        }
+    }
+    else
+    {
+        if(currentDistance < slowingRadius)
+        {
+            Out(target, 100 * currentDistance / slowingRadius);
+        }
+        else
+        {
+            Out(target, 100);
         }
     }
 }
