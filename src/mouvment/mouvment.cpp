@@ -144,14 +144,35 @@ public:
     maxDistance{}
     {}
 
-bool UseBoost(bool boostAsked, int currentDistance)
+bool UseBoost(bool boostAsked, int currentDistance, int angle)
 {
     if(!boostAvailable)
     {
         return false;
     }
 
-    if(boostAsked && currentDistance + epsilon > maxDistance)
+    if(!boostAsked)
+    {
+        return false;
+    }
+
+    if(angle > 5 || angle < -5)
+    {
+        return false;
+    }
+
+    if(lapNumber == 3 && currentCheckpoint == checkpointNumber - 1)
+    {
+        cerr << "LAST MINUTE BOOST" << endl;
+        return true;
+    }
+
+    if(currentDistance < 2000)
+    {
+        return false;
+    }
+
+    if(currentDistance + epsilon > maxDistance)
     {
         boostAvailable = false;
         cerr << "USE BOOST" << endl;
@@ -161,38 +182,52 @@ bool UseBoost(bool boostAsked, int currentDistance)
     return false;
 }
 
-void AddCheckpoint(vec2i position, int distance)
+int GetCheckpointIndex(vec2i position)
 {
-    if(allCheckpointFound)
+    auto it = find(checkpoints.begin(), checkpoints.end(), position);
+    if (it != checkpoints.end())
     {
-        return;
+        return it - checkpoints.begin();
     }
-    
-    const vec2 newCheckpoint(position);
-    
-    if(checkpoints.empty())
+    else
     {
-        checkpoints.push_back(newCheckpoint);
-    }
-    else if(checkpoints.back() != newCheckpoint)
-    {
-        checkpoints.push_back(newCheckpoint);
-
-        if(checkpoints.front() == newCheckpoint)
-        {
-            allCheckpointFound = true;  
-        }
-
-        if(maxDistance < distance)
-        {
-            maxDistance = distance;
-        }
+        cerr << "CHECKPOINT NOT FOUND" << endl;
+        return -1;
     }
 }
 
-void Out(vec2i position, int thrust, bool boostAsked = false)
+void AddCheckpoint(vec2i position, int distance)
 {
-    bool useBoost = UseBoost(boostAsked, currentDistance);
+    if(!allCheckpointFound)
+    {
+        const vec2 newCheckpoint(position);
+
+        if(checkpoints.empty())
+        {
+            checkpoints.push_back(newCheckpoint);
+        }
+        else if(checkpoints.back() != newCheckpoint)
+        {
+            checkpoints.push_back(newCheckpoint);
+
+            if(checkpoints.front() == newCheckpoint)
+            {
+                allCheckpointFound = true;
+                checkpointNumber = checkpoints.size();
+            }
+
+            if(maxDistance < distance)
+            {
+                maxDistance = distance;
+            }
+        }
+    }
+
+}
+
+void Out(vec2i position, int thrust)
+{
+    bool useBoost = UseBoost(thrust == 100, currentDistance, targetAngle);
     cout << position.x << " " << position.y << " ";
     cerr << "BOOST AVALAIBLE : " << boostAvailable << endl;
     if(useBoost)
@@ -215,33 +250,56 @@ void Update()
 
     AddCheckpoint(target, currentDistance);
 
+    if(lastCheckpoint != target)
+    {
+        isNewCheckpoint = true;
+        ++currentCheckpoint;
+        if(currentCheckpoint >= checkpointNumber)
+        {
+            ++lapNumber;
+        }
+    }
+
     if(targetAngle > 90 || targetAngle < -90)
     {
         Out(target, 0);
     }
     else
     {
-        if(allCheckpointFound && currentDistance + epsilon > maxDistance)
-        {
-            Out(target, 100, true);
-        }
-        else
+        if(allCheckpointFound)
         {
             Out(target, 100);
         }
+        else
+        {
+            cerr << "CurrentDistance : " << currentDistance << endl;
+            if(currentDistance < 3000 && (targetAngle > 5 || targetAngle < -5))
+            {
+                cerr << "SLOW" << endl;
+                Out(target, currentDistance / 3000);
+            }
+            else
+            {
+                Out(target, 100);
+            }
+        }
     }
-
 }
 
 private:
     vector<vec2i> checkpoints;
     vec2i position;
     vec2i target;
+    vec2i lastCheckpoint;
     int maxDistance;
     int currentDistance;
     int targetAngle;
+    int lapNumber;
+    int checkpointNumber;
+    int currentCheckpoint;
     bool boostAvailable : 1;
     bool allCheckpointFound : 1;
+    bool isNewCheckpoint : 1;
 };
 
 int main()
