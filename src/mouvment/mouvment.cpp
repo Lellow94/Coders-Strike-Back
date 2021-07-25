@@ -133,7 +133,7 @@ typedef vec2<int> vec2i;
 
 constexpr int epsilon = 3000;
 constexpr int slowingRadius = 3000;
-constexpr int straitAngle = 5;
+constexpr int straitAngle = 1;
 constexpr int UILapNumber = 3;
 constexpr int maxAngle = 90;
 
@@ -280,7 +280,7 @@ void Update()
         currentDirection = currentDirection.normalize();
         
         vec2 steeringDirection = (desiredDirection - currentDirection);
-        steeringDirection = steeringDirection.normalize() * 300;
+        steeringDirection = steeringDirection.normalize() * 100;
         
         target += steeringDirection.x;
         target += steeringDirection.y;
